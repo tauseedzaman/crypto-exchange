@@ -3,6 +3,7 @@ import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Wallet {
+    using SafeMath for uint256;
     struct Token {
         bytes32 ticker;
         address tokenAddress;
