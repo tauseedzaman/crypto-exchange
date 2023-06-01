@@ -1,0 +1,6 @@
+Testing 
+
+let wallet = await Wallet.deployed()
+let token = await token.deployed()
+wallet.addToken(ticker, token.address);
+wallet.tokenMapping(ticker)

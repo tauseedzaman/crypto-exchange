@@ -46,4 +46,63 @@ contract('Wallet', function(accounts) {
         assert.equal(token.tokenAddress, tokenAddress, 'Token address not added correctly');
         // assert.equal(tokenList[0], ticker, 'Ticker not added to the token list');
     });
+
+    it('should deposit tokens into the wallet', async() => {
+        const depositAmount = 150;
+        const ticker = web3.utils.fromUtf8('Zaman');
+        await tokenInstance.approve(walletInstance.address, depositAmount);
+
+        await walletInstance.deposit(depositAmount, ticker);
+
+        const balance = await walletInstance.balances(accounts[0], ticker);
+        assert.equal(balance, depositAmount, 'Tokens not deposited correctly');
+
+        const tokenBalance = await tokenInstance.balanceOf(walletInstance.address);
+        assert.equal(tokenBalance, depositAmount, 'Tokens not transferred correctly');
+    });
+
+    it('should withdraw tokens from the wallet', async() => {
+        const withdrawalAmount = 20;
+        const ticker = web3.utils.fromUtf8('Zaman');
+
+        const initialBalance = await walletInstance.balances(accounts[0], ticker);
+
+        // Withdraw tokens from the wallet
+        await walletInstance.withdraw(withdrawalAmount, ticker, {
+            from: accounts[0]
+        });
+
+        // Check the updated balances in the wallet
+        const balance = await walletInstance.balances(accounts[0], ticker);
+        assert.equal(balance, initialBalance - withdrawalAmount, 'Tokens not withdrawn correctly');
+    });
+
+    it('should revert if token is not supported', async() => {
+        const withdrawalAmount = 20;
+        const invalidTicker = web3.utils.fromUtf8('Invalid'); //so far we have only one token and that is zaman
+
+        try {
+            await walletInstance.withdraw(withdrawalAmount, invalidTicker);
+            assert.fail('Expected revert not received');
+        } catch (error) {
+            assert(error.message.includes('Invalid Token'), 'Unexpected revert reason');
+        }
+    });
+
+    it('should revert if balance is insufficient', async() => {
+        const ticker = web3.utils.fromUtf8('Zaman');
+
+        const initialBalance = await walletInstance.balances(accounts[0], ticker);
+        const insufficientAmount = initialBalance + 10;
+
+        try {
+            await walletInstance.withdraw(insufficientAmount, ticker, {
+                from: accounts[0]
+            });
+            assert.fail('Expected revert not received');
+        } catch (error) {
+            assert(error.message.includes('Invalid Balance amount'), 'Unexpected revert reason');
+        }
+    });
+
 });
